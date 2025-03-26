@@ -25,6 +25,19 @@ public class Player : MonoBehaviour
 
         Vector2 playerVelocity = new Vector2(controlThrow * runSpeed, myRigidBody2D.linearVelocity.y);
         myRigidBody2D.linearVelocity = playerVelocity;
+
+        FlipSprite();
+    }
+
+    private void FlipSprite()
+    {
+        bool runningHorizontally = Mathf.Abs(myRigidBody2D.linearVelocity.x) > Mathf.Epsilon;
+
+        if (runningHorizontally)
+        {
+            transform.localScale = new Vector2(Mathf.Sign(myRigidBody2D.linearVelocity.x), 1f);
+
+        }
     }
 }
 
