@@ -28,6 +28,8 @@ public class Player : MonoBehaviour
         Vector2 playerVelocity = new Vector2(controlThrow * runSpeed, myRigidBody2D.linearVelocity.y);
         myRigidBody2D.linearVelocity = playerVelocity;
 
+
+
         FlipSprite();
         changingToRunningState();
     }
