@@ -1,9 +1,11 @@
+using System;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 public class Player : MonoBehaviour
 {
     [SerializeField] float runSpeed = 10f;
+    [SerializeField] float jumpSpeed = 15f;
 
     Rigidbody2D myRigidBody2D;
     Animator myAnimator;
@@ -19,6 +21,18 @@ public class Player : MonoBehaviour
     void Update()
     {
         run();
+        jump();
+    }
+
+    private void jump()
+    {
+        bool isJumping = CrossPlatformInputManager.GetButtonDown("Jump");
+
+        if (isJumping)
+        {
+            Vector2 jumpVelocity = new Vector2(myRigidBody2D.linearVelocity.x, jumpSpeed);
+            myRigidBody2D.linearVelocity = jumpVelocity;
+        }
     }
 
     private void run()
@@ -27,8 +41,6 @@ public class Player : MonoBehaviour
 
         Vector2 playerVelocity = new Vector2(controlThrow * runSpeed, myRigidBody2D.linearVelocity.y);
         myRigidBody2D.linearVelocity = playerVelocity;
-
-
 
         FlipSprite();
         changingToRunningState();
