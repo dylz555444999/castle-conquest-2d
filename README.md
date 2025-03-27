@@ -9,9 +9,3 @@ but there is movement and animations but no other game mechanincs (coming within
 ## Authors
 
 - [@dylz5555444999](https://github.com/dylz555444999)
-
-
-## CC License
-
-castle conquest 2d by Dylan Hassan is marked with CC0 1.0 
-
