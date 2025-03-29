@@ -1,11 +1,14 @@
 using System;
 using Unity.VisualScripting.FullSerializer;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
+
 public class Player : MonoBehaviour
 {
     [SerializeField] float runSpeed = 10f;
     [SerializeField] float jumpSpeed = 15f;
+    [SerializeField] float climbSpeed = 8f;
 
     Rigidbody2D myRigidBody2D;
     Animator myAnimator;
@@ -26,11 +29,28 @@ public class Player : MonoBehaviour
     {
         run();
         jump();
+        climb();
+    }
+
+    private void climb()
+    {
+        if (myPlayersFeet.IsTouchingLayers(LayerMask.GetMask("Climbing")))
+        {
+            float controlThrow = CrossPlatformInputManager.GetAxis("Vertical");
+            Vector2 climbVelocity = new Vector2(myRigidBody2D.linearVelocity.x, controlThrow * climbSpeed);
+
+            myRigidBody2D.linearVelocity = climbVelocity;
+
+            myAnimator.SetBool("Climbing", true);
+        }
+        else
+        {
+            myAnimator.SetBool("Climbing", false);
+        }
     }
 
     private void jump()
     {
-
         if (!myPlayersFeet.IsTouchingLayers(LayerMask.GetMask("Ground"))) { return; }
 
         bool isJumping = CrossPlatformInputManager.GetButtonDown("Jump");
@@ -66,8 +86,6 @@ public class Player : MonoBehaviour
         if (runningHorizontally)
         {
             transform.localScale = new Vector2(Mathf.Sign(myRigidBody2D.linearVelocity.x), 1f);
-
         }
     }
 }
-
