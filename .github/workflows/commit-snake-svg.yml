@@ -1,53 +1,33 @@
-name: Update Commit Snake SVG
+name: Generate snake animation
 
 on:
+  schedule: # execute every 12 hours
+    - cron: "0 */12 * * *"
+
+  workflow_dispatch:
+
   push:
     branches:
-      - master
-
-permissions:
-  contents: write
+    - master
 
 jobs:
-  generate-snake-svg:
+  generate:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v3
+      - name: generate snake.svg
+        uses: Platane/snk/svg-only@v3
         with:
-          fetch-depth: 0
+          github_user_name: ${{ github.repository_owner }}
+          outputs: dist/snake.svg?color_snake=#ff0067&color_dots=#222222,#6a344d,#8f315d,#b52f6d,#da2c7d
 
-      - name: Generate snake SVG
-        run: |
-          commit_count=$(git rev-list --count HEAD)
-          width=$((commit_count * 20))
-          height=40
-
-          echo '<?xml version="1.0" encoding="UTF-8"?>' > commit_snake.svg
-          echo '<svg xmlns="http://www.w3.org/2000/svg" width="'$width'" height="'$height'">' >> commit_snake.svg
-          echo '<rect width="'$width'" height="'$height'" fill="black"/>' >> commit_snake.svg
-
-          x=0
-          for i in $(seq 1 $commit_count); do
-            echo '<rect x="'$x'" y="5" width="18" height="30" fill="yellow" rx="5" ry="5"/>' >> commit_snake.svg
-            x=$((x + 20))
-          done
-
-          head_x=$(( (commit_count - 1) * 20 + 9 ))
-          head_y=20
-          echo '<circle cx="'$head_x'" cy="'$head_y'" r="14" fill="yellow"/>' >> commit_snake.svg
-          echo '<circle cx="'$((head_x - 5))'" cy="15" r="3" fill="black"/>' >> commit_snake.svg
-          echo '<circle cx="'$((head_x + 5))'" cy="15" r="3" fill="black"/>' >> commit_snake.svg
-          echo '</svg>' >> commit_snake.svg
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add commit_snake.svg
-          if ! git diff --cached --quiet; then
-            git commit -m "Update commit snake SVG"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+      - name: push snake.svg to the output branch
+        uses: crazy-max/ghaction-github-pages@v3.1.0
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
