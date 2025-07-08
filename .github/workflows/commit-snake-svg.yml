@@ -1,0 +1,80 @@
+name: Generate Commit Snake SVG and push to output branch
+
+on:
+  push:
+    branches:
+      - master  # change if your default branch is master or something else
+
+jobs:
+  generate-snake-svg:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # fetch full history to count commits
+
+    - name: Generate snake SVG
+      run: |
+        commit_count=$(git rev-list --count HEAD)
+        echo "Commit count is $commit_count"
+
+        # SVG params
+        width=$((commit_count * 20))
+        height=40
+
+        # SVG header with black background
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > commit_snake.svg
+        echo '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="'$width'" height="'$height'">' >> commit_snake.svg
+        echo '  <rect width="'$width'" height="'$height'" fill="black" />' >> commit_snake.svg
+
+        # Draw snake body: yellow rectangles, 18x30 size each, spaced by 2px
+        x=0
+        for i in $(seq 1 $commit_count); do
+          echo '  <rect x="'$x'" y="5" width="18" height="30" fill="yellow" rx="5" ry="5"/>' >> commit_snake.svg
+          x=$((x + 20))
+        done
+
+        # Draw snake head: a yellow circle with black eyes at the end
+        head_x=$(( (commit_count - 1) * 20 + 9 ))
+        head_y=20
+        echo '  <circle cx="'$head_x'" cy="'$head_y'" r="14" fill="yellow" />' >> commit_snake.svg
+        echo '  <circle cx="'$((head_x - 5))'" cy="15" r="3" fill="black" />' >> commit_snake.svg
+        echo '  <circle cx="'$((head_x + 5))'" cy="15" r="3" fill="black" />' >> commit_snake.svg
+        echo '</svg>' >> commit_snake.svg
+
+        echo "Generated commit_snake.svg with width $width"
+
+    - name: Setup Git user
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+    - name: Create or switch to output branch
+      run: |
+        # Check if output branch exists
+        if git show-ref --quiet refs/heads/output; then
+          git checkout output
+          git pull origin output
+        else
+          git checkout --orphan output
+          git rm -rf .
+          git clean -fdx
+          git commit --allow-empty -m "Initialize output branch"
+          git push origin output
+        fi
+
+    - name: Copy SVG to repo root
+      run: |
+        cp commit_snake.svg .
+
+    - name: Commit and push SVG to output branch
+      run: |
+        git add commit_snake.svg
+        if ! git diff --cached --quiet; then
+          git commit -m "Update commit snake SVG"
+          git push origin output
+        else
+          echo "No changes to commit on output branch."
+        fi
